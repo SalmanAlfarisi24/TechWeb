@@ -86,7 +86,7 @@
                     <i class="fa-solid fa-gamepad arena-icon-huge" style="color: #a855f7;"></i>
                     <h3>Coding Game Arena: Code Journey</h3>
                     <p>Uji ketangkasan logika, kalahkan monster coding dengan menjawab kuis pilihan ganda, kumpulkan koin, dan bersainglah di papan peringkat leaderboard!</p>
-                    <a href="game/index.html" class="btn-materi-link btn-arena-purple">Masuk Arena Pertarungan <i class="fa-solid fa-gun"></i></a>
+                    <a href="game/game.html" class="btn-materi-link btn-arena-purple">Masuk Arena Pertarungan <i class="fa-solid fa-gun"></i></a>
                 </div>
             </div>
 
