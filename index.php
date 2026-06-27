@@ -6,6 +6,17 @@
     <title>NgodingKuy - Platform Belajar Coding Interaktif</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="assets/css/style.css">
+    <style>
+        /* Perbaikan taktis langsung untuk menyeimbangkan posisi tombol hero ke tengah */
+        .hero-buttons {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 1.5rem;
+            width: 100%;
+        }
+    </style>
 </head>
 <body>
 
@@ -19,7 +30,7 @@
     <div id="auth-modal" class="modal-overlay hidden">
         <div class="modal-card">
             <h3><i class="fa-solid fa-user-lock"></i> Masuk ke NgodingKuy</h3>
-            <p>Masukkan Nama dan Password Anda untuk mulai belajar, menyimpan progres game, dan memberikan ulasan testimoni.</p>
+            <p>Masukkan Nama dan Password Anda untuk mulai belajar dan memberikan testimoni.</p>
             <form id="auth-form">
                 <div class="form-group">
                     <label for="auth-username">Username</label>
@@ -29,7 +40,7 @@
                     <label for="auth-password">Password</label>
                     <input type="password" id="auth-password" required placeholder="Masukkan password Anda">
                 </div>
-                <button type="submit" class="btn-submit-auth">Masuk / Daftar <i class="fa-solid fa-right-to-bracket"></i></button>
+                <button type="submit" class="btn-submit-auth"><i class="fa-solid fa-right-to-bracket"></i> Masuk / Daftar</button>
             </form>
         </div>
     </div>
@@ -50,7 +61,6 @@
                 <li><a href="#hero"><i class="fa-solid fa-house"></i> Home</a></li>
                 <li><a href="#materi-section"><i class="fa-solid fa-book"></i> Materi</a></li>
                 <li><a href="#editor-section"><i class="fa-solid fa-laptop-code"></i> Live Editor</a></li>
-                <li><a href="#quiz-section"><i class="fa-solid fa-graduation-cap"></i> Kuis</a></li>
                 <li><a href="#testimoni-section"><i class="fa-solid fa-comments"></i> Testimoni</a></li>
                 <li id="user-display" class="user-badge-nav" style="display:none;">
                     <i class="fa-solid fa-user"></i> <span id="current-user-name">Guest</span>
@@ -64,7 +74,7 @@
         <div class="hero-content">
             <span class="badge">🚀 Platform Belajar Masa Kini</span>
             <h1>Kuasai Coding Tanpa Ribet Setup</h1>
-            <p>Tulis kode HTML dan CSS langsung di browser. Lihat hasilnya secara instan, uji pemahamanmu dengan kuis interaktif, dan jalankan misi petualangan game coding edukasi!</p>
+            <p>Tulis kode HTML dan CSS langsung di browser. Lihat hasilnya secara instan, uji pemahamanmu dengan kuis interaktif, dan bagikan pengalaman belajarmu!</p>
             <div class="hero-buttons">
                 <a href="#editor-section" class="btn-primary-lg">Mulai Ngoding Sekarang</a>
                 <a href="#materi-section" class="btn-secondary-lg">Lihat Materi</a>
@@ -77,31 +87,35 @@
         <section id="materi-section" class="section-layout">
             <div class="section-header">
                 <h2><i class="fa-solid fa-book"></i> Alur Belajar Coding</h2>
-                <p>Pilih kategori modul pemrograman atau masuk ke arena bermain interaktif untuk menguji kemampuan Anda hari ini.</p>
+                <p>Pilih kategori pemrograman yang ingin Anda kuasai hari ini.</p>
             </div>
             
-            <div class="materi-main-showcase">
-                <div class="materi-card game-arena-card" style="border-color: #a855f7;">
-                    <div class="card-badge-new">NEW FEATURE</div>
-                    <i class="fa-solid fa-gamepad arena-icon-huge" style="color: #a855f7;"></i>
-                    <h3>Coding Game Arena: Code Journey</h3>
-                    <p>Uji ketangkasan logika, kalahkan monster coding dengan menjawab kuis pilihan ganda, kumpulkan koin, dan bersainglah di papan peringkat leaderboard!</p>
-                    <a href="game/game.html" class="btn-materi-link btn-arena-purple">Masuk Arena Pertarungan <i class="fa-solid fa-gun"></i></a>
-                </div>
-            </div>
-
             <div class="materi-grid">
+                <div class="materi-card" style="border-color: var(--accent-color);">
+                    <i class="fa-solid fa-gamepad" style="color: #a855f7;"></i>
+                    <h3>Coding Game Arena</h3>
+                    <p>Uji ketangkasan dan logikamu di arena bermain interaktif berbasis grafis 2D Canvas dengan mengalahkan zombie coding.</p>
+                    <a href="game/index.html" class="btn-materi-link">
+                        <button class="btn-run" style="background-color: var(--accent-color); cursor: pointer;"><i class="fa-solid fa-gamepad"></i> Masuk Arena Game</button>
+                    </a>
+                </div>
+
                 <div class="materi-card">
                     <i class="fa-brands fa-html5 card-icon-web"></i>
                     <h3>Web Development</h3>
-                    <p>Pelajari fondasi dasar arsitektur web terstruktur menggunakan HTML5, CSS3, dan JavaScript Core secara mendalam.</p>
-                    <a href="materi-web.php" class="btn-materi-link">Mulai Belajar <i class="fa-solid fa-arrow-right"></i></a>
+                    <p>Pelajari fondasi dasar pembuatan website menggunakan HTML5, CSS3, dan JavaScript Dasar secara terstruktur.</p>
+                    <a href="materi-web.php" class="btn-materi-link">
+                        <button class="btn-run" style="cursor: pointer;"><i class="fa-solid fa-book-open"></i> Buka Materi Web</button>
+                    </a>
                 </div>
+
                 <div class="materi-card">
                     <i class="fa-solid fa-mobile-screen-button card-icon-app"></i>
                     <h3>Mobile App Dev</h3>
-                    <p>Langkah awal berkarir membangun aplikasi Android dan iOS native menggunakan framework modern masa kini.</p>
-                    <a href="materi-app.php" class="btn-materi-link disabled-lock-btn">Segera Hadir <i class="fa-solid fa-lock"></i></a>
+                    <p>Langkah awal membangun aplikasi Android dan iOS menggunakan framework modern masa kini.</p>
+                    <a href="materi-app.php" class="btn-materi-link" onclick="return false;">
+                        <button class="btn-run" style="background-color: #bdc3c7; cursor: not-allowed;"><i class="fa-solid fa-lock"></i> Segera Hadir App</button>
+                    </a>
                 </div>
             </div>
         </section>
@@ -109,7 +123,7 @@
         <section id="editor-section" class="section-layout">
             <div class="section-header">
                 <h2><i class="fa-solid fa-laptop-code"></i> Ruang Kerja Interaktif</h2>
-                <p>Gunakan panel kiri untuk menulis sintaks HTML/CSS dan lihat langsung visual perubahannya secara real-time di panel preview kanan.</p>
+                <p>Gunakan panel kiri untuk menulis sintaks HTML/CSS dan lihat langsung perubahannya.</p>
             </div>
             <div class="editor-grid">
                 <div class="cheatsheet-panel">
@@ -135,26 +149,10 @@
             </div>
         </section>
 
-        <section id="quiz-section" class="section-layout">
-            <div class="section-header">
-                <h2><i class="fa-solid fa-graduation-cap"></i> Uji Kemampuanmu</h2>
-                <p>Uji sejauh mana pemahaman materi Anda dengan kuis evaluasi singkat di bawah ini.</p>
-            </div>
-            <div class="quiz-grid">
-                <div class="quiz-card-box">
-                    <div class="quiz-header"><span id="quiz-badge" class="quiz-badge">Soal #1</span></div>
-                    <p class="quiz-question" id="question-text">Memuat pertanyaan...</p>
-                    <div class="quiz-options" id="options-container"></div>
-                    <button id="btn-submit-quiz" class="btn-submit"><i class="fa-solid fa-paper-plane"></i> Kirim Jawaban</button>
-                    <div id="quiz-feedback" class="feedback-msg"></div>
-                </div>
-            </div>
-        </section>
-
         <section id="testimoni-section" class="section-layout">
             <div class="section-header">
                 <h2><i class="fa-solid fa-comments"></i> Dinding Testimoni (Sistem CRUD)</h2>
-                <p>Ulasan Anda otomatis tervalidasi dengan session login Firebase Realtime Database dan tampil pada slider kontinu.</p>
+                <p>Ulasan Anda akan tampil pada slider otomatis di bawah ini secara real-time.</p>
             </div>
             
             <div class="testimoni-grid">
@@ -168,7 +166,7 @@
                         </div>
                         <div class="form-group">
                             <label for="input-pesan">Pesan & Kesan</label>
-                            <textarea id="input-pesan" required placeholder="Bagikan pengalaman serumu belajar di NgodingKuy..."></textarea>
+                            <textarea id="input-pesan" required placeholder="Bagikan pengalaman serumu..."></textarea>
                         </div>
                         <div class="form-buttons">
                             <button type="submit" id="btn-save-testimoni" class="btn-success"><i class="fa-solid fa-paper-plane"></i> Kirim</button>
@@ -182,7 +180,7 @@
                     
                     <div class="slider-viewport">
                         <div id="testimoni-slider" class="slider-track">
-                            <p class="loading-text"><i class="fa-solid fa-spinner fa-spin"></i> Memuat testimoni database...</p>
+                            <p class="loading-text"><i class="fa-solid fa-spinner fa-spin"></i> Memuat testimoni...</p>
                         </div>
                     </div>
                 </div>
