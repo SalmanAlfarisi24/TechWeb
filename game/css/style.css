@@ -1,0 +1,68 @@
+/* =========================================
+   GAYA DASAR & VARIABEL WARNA
+   ========================================= */
+:root {
+    --primary: #4A90E2;
+    --secondary: #50E3C2;
+    --accent: #F5A623;
+    --bg-color: #F0F4F8;
+    --text-dark: #2C3E50;
+    --hp-green: #2ECC71;
+    --hp-red: #E74C3C;
+    --panel-bg: #FFFFFF;
+    --shadow: 0 8px 24px rgba(0,0,0,0.1);
+    --border-radius: 16px;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Nunito', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    user-select: none; /* Mencegah teks ter-highlight secara tidak sengaja */
+}
+
+body {
+    background-color: #e2e8f0; /* Warna latar luar untuk desktop */
+    color: var(--text-dark);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+/* Tipografi Dasar */
+h2, h3 { 
+    color: var(--primary); 
+}
+
+/* Tombol Umum */
+button {
+    -webkit-tap-highlight-color: transparent; /* Menghilangkan efek kotak biru saat diklik di HP */
+    cursor: pointer;
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: bold;
+    width: 100%;
+    transition: background 0.2s;
+}
+
+.btn-primary:hover { 
+    background: #357ABD; 
+}
+
+.tool-btn {
+    padding: 10px 15px;
+    border-radius: 8px;
+    border: none;
+    background: #E2E8F0;
+    font-weight: bold;
+    color: var(--text-dark);
+}

@@ -1,0 +1,44 @@
+/* =========================================
+   ANIMASI CSS UNTUK UI & GAMEPLAY
+   ========================================= */
+
+/* Efek transisi antar layar agar perpindahan tidak kaku */
+.screen {
+    animation: fadeIn 0.4s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Efek getar untuk HP bar atau karakter saat terkena serangan */
+@keyframes shakeUI {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-10px); }
+    75% { transform: translateX(10px); }
+}
+.anim-shake { 
+    animation: shakeUI 0.4s ease; 
+}
+
+/* Efek berkedip merah saat terkena damage (damage flash) */
+@keyframes flashDamage {
+    0%, 100% { filter: brightness(1); }
+    50% { filter: brightness(0.5) sepia(1) hue-rotate(-50deg) saturate(5); }
+}
+.anim-damage { 
+    animation: flashDamage 0.4s ease; 
+}
+
+/* Warna indikator tombol jawaban */
+.option-btn.correct { 
+    background: var(--hp-green); 
+    color: white; 
+    border-color: var(--hp-green); 
+}
+.option-btn.wrong { 
+    background: var(--hp-red); 
+    color: white; 
+    border-color: var(--hp-red); 
+}
