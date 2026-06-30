@@ -1,21 +1,20 @@
 /* ==========================================================================
-   assets/js/crud-testimoni.js (Logika CRUD & Auth Firebase - Full Premium Fix)
+   assets/js/crud-testimoni.js (Logika CRUD & Login Nama via MySQL/PHP)
    ========================================================================== */
-import { ref, push, onValue, update, remove, get, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-import { db } from "./firebase-config.js";
 
-// Referensi Jalur Database Firebase
-const testimoniRef = ref(db, "testimonis");
-const usersRef = ref(db, "users");
+const API_AUTH = "api/auth.php";
+const API_TESTIMONI = "api/testimoni.php";
+const POLL_INTERVAL_MS = 8000; // refresh data testimoni berkala agar terasa real-time
 
 // Selektor Elemen HTML
 const authModal = document.getElementById("auth-modal");
 const authForm = document.getElementById("auth-form");
 const authUsernameInput = document.getElementById("auth-username");
-const authPasswordInput = document.getElementById("auth-password");
 
 const userDisplay = document.getElementById("user-display");
 const currentUserName = document.getElementById("current-user-name");
+const userDisplayMobile = document.getElementById("user-display-mobile");
+const currentUserNameMobile = document.querySelector(".current-user-name-mobile");
 
 const testimoniForm = document.getElementById("testimoni-form");
 const testimoniIdInput = document.getElementById("testimoni-id");
@@ -28,104 +27,118 @@ const btnCancelEdit = document.getElementById("btn-cancel-edit");
 
 let currentUser = null;
 let sliderInterval = null;
+let pollInterval = null;
+let latestData = [];
 
 // ==========================================================================
-// 1. LOGIKA AUTH POP-UP (LOGIN / DAFTAR OTOMATIS)
+// 1. LOGIKA LOGIN / DAFTAR OTOMATIS (HANYA NAMA, TANPA PASSWORD)
 // ==========================================================================
-// Periksa status login saat halaman dibuka (menggunakan localStorage agar persisten)
 window.addEventListener("DOMContentLoaded", () => {
     const savedUser = localStorage.getItem("ngodingkuy_user");
     if (savedUser) {
         setLoggedInUser(savedUser);
+        loadTestimoni();
+        startPolling();
     } else {
-        // Tampilkan pop-up login blur jika belum login dan elemen modal tersedia
-        if (authModal) {
-            authModal.classList.remove("hidden");
-        }
+        if (authModal) authModal.classList.remove("hidden");
     }
 });
 
 if (authForm) {
-    authForm.addEventListener("submit", (e) => {
+    authForm.addEventListener("submit", async (e) => {
         e.preventDefault();
-        if (!authUsernameInput || !authPasswordInput) return;
+        if (!authUsernameInput) return;
 
-        const username = authUsernameInput.value.trim().toLowerCase().replace(/[^a-z0-9_]/g, "");
-        const password = authPasswordInput.value;
+        const namaInput = authUsernameInput.value.trim();
+        if (!namaInput) return;
 
-        if (!username || !password) return;
+        try {
+            const res = await fetch(API_AUTH, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ nama: namaInput })
+            });
+            const result = await res.json();
 
-        const singleUserRef = ref(db, `users/${username}`);
-
-        // Cek apakah user sudah terdaftar di database
-        get(singleUserRef).then((snapshot) => {
-            if (snapshot.exists()) {
-                // --- USER SUDAH ADA (PROSES LOGIN) ---
-                const userData = snapshot.val();
-                if (userData.password === password) {
-                    triggerToast(`Selamat datang kembali, ${username}! 🎉`);
-                    setLoggedInUser(username);
-                } else {
-                    alert("Password salah! Silakan coba lagi.");
-                }
+            if (result.success) {
+                triggerToast(result.message + (result.mode === "register" ? " 🚀" : " 🎉"));
+                setLoggedInUser(result.nama);
+                loadTestimoni();
+                startPolling();
             } else {
-                // --- USER BELUM ADA (PROSES DAFTAR OTOMATIS) ---
-                set(singleUserRef, {
-                    password: password,
-                    registeredAt: Date.now()
-                }).then(() => {
-                    triggerToast(`Akun baru berhasil dibuat! Selamat datang ${username}. 🚀`);
-                    setLoggedInUser(username);
-                });
+                alert(result.message || "Gagal masuk. Silakan coba lagi.");
             }
-        }).catch(err => console.error("Auth Error:", err));
+        } catch (err) {
+            console.error("Auth Error:", err);
+            alert("Tidak dapat terhubung ke server. Pastikan backend PHP & MySQL aktif.");
+        }
     });
 }
 
-function setLoggedInUser(username) {
-    currentUser = username;
-    localStorage.setItem("ngodingkuy_user", username);
-    
-    // Sembunyikan modal pop-up secara aman
+function setLoggedInUser(nama) {
+    currentUser = nama;
+    localStorage.setItem("ngodingkuy_user", nama);
+
     if (authModal) authModal.classList.add("hidden");
-    
-    // Tampilkan nama di navbar dan kunci ke form input nama testimoni jika elemen tersedia
-    if (currentUserName) currentUserName.textContent = username;
+
+    if (currentUserName) currentUserName.textContent = nama;
     if (userDisplay) userDisplay.style.display = "inline-flex";
-    if (inputNama) inputNama.value = username;
+
+    if (currentUserNameMobile) currentUserNameMobile.textContent = nama;
+    if (userDisplayMobile) userDisplayMobile.style.display = "flex";
+
+    if (inputNama) inputNama.value = nama;
 }
 
 // ==========================================================================
-// 2. LOGIKA CRUD TESTIMONI
+// 2. LOGIKA CRUD TESTIMONI (FETCH KE api/testimoni.php)
 // ==========================================================================
 if (testimoniForm) {
-    testimoniForm.addEventListener("submit", (e) => {
+    testimoniForm.addEventListener("submit", async (e) => {
         e.preventDefault();
         if (!currentUser) {
             alert("Anda harus masuk terlebih dahulu!");
             return;
         }
-
         if (!inputPesan || !testimoniIdInput) return;
 
         const id = testimoniIdInput.value;
-        const dataTestimoni = {
-            nama: currentUser, // Dipastikan aman mengambil dari data session login
-            pesan: inputPesan.value.trim(),
-            timestamp: Date.now()
-        };
+        const pesan = inputPesan.value.trim();
+        if (!pesan) return;
 
-        if (id === "") {
-            push(testimoniRef, dataTestimoni).then(() => {
-                triggerToast("Testimoni berhasil dikirim! ✨");
-                inputPesan.value = "";
-            });
-        } else {
-            const singleTestiRef = ref(db, `testimonis/${id}`);
-            update(singleTestiRef, dataTestimoni).then(() => {
-                triggerToast("Testimoni berhasil diperbarui! 📝");
-                resetFormMode();
-            });
+        try {
+            if (id === "") {
+                const res = await fetch(API_TESTIMONI, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ nama: currentUser, pesan })
+                });
+                const result = await res.json();
+                if (result.success) {
+                    triggerToast("Testimoni berhasil dikirim! ✨");
+                    inputPesan.value = "";
+                    loadTestimoni();
+                } else {
+                    alert(result.message || "Gagal mengirim testimoni.");
+                }
+            } else {
+                const res = await fetch(API_TESTIMONI, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ id, nama: currentUser, pesan })
+                });
+                const result = await res.json();
+                if (result.success) {
+                    triggerToast("Testimoni berhasil diperbarui! 📝");
+                    resetFormMode();
+                    loadTestimoni();
+                } else {
+                    alert(result.message || "Gagal memperbarui testimoni.");
+                }
+            }
+        } catch (err) {
+            console.error("CRUD Error:", err);
+            alert("Tidak dapat terhubung ke server.");
         }
     });
 }
@@ -133,51 +146,62 @@ if (testimoniForm) {
 // ==========================================================================
 // 3. READ DATA & SLIDER GESER KANAN 2 DETIK KONTINU
 // ==========================================================================
-if (testimoniSlider) {
-    onValue(testimoniRef, (snapshot) => {
-        clearInterval(sliderInterval); // Hentikan slider lama saat ada pembaruan data
-        testimoniSlider.innerHTML = "";
-
-        if (snapshot.exists()) {
-            const data = snapshot.val();
-            const keys = Object.keys(data);
-            
-            // Buat element kartu testimoni
-            keys.forEach((key) => {
-                const item = data[key];
-                const slideCard = document.createElement("div");
-                slideCard.className = "testi-slider-card";
-                
-                // Tombol edit/hapus hanya muncul jika kartu itu milik user yang sedang login
-                const actionButtons = (item.nama === currentUser) ? `
-                    <div class="card-actions">
-                        <button class="btn-edit-sm" data-id="${key}"><i class="fa-solid fa-pen"></i> Edit</button>
-                        <button class="btn-delete-sm" data-id="${key}"><i class="fa-solid fa-trash"></i> Hapus</button>
-                    </div>
-                ` : '';
-
-                slideCard.innerHTML = `
-                    <div class="testi-bubble">
-                        <h4><i class="fa-solid fa-user-tie"></i> ${escapeHTML(item.nama)}</h4>
-                        <p>"${escapeHTML(item.pesan)}"</p>
-                        ${actionButtons}
-                    </div>
-                `;
-                testimoniSlider.appendChild(slideCard);
-            });
-
-            // Trik Klona Kartu Pertama ke Paling Akhir untuk Transisi Seamless Geser Kanan Kontinu
-            if (keys.length > 1) {
-                const firstCardClone = testimoniSlider.children[0].cloneNode(true);
-                testimoniSlider.appendChild(firstCardClone);
-                startSliderAnimation(keys.length);
-            }
-            
-            attachCardEvents(data);
-        } else {
-            testimoniSlider.innerHTML = `<p style="text-align:center; width:100%;">Belum ada testimoni.</p>`;
+async function loadTestimoni() {
+    if (!testimoniSlider) return;
+    try {
+        const res = await fetch(API_TESTIMONI);
+        const result = await res.json();
+        if (result.success) {
+            latestData = result.data;
+            renderSlider(latestData);
         }
-    });
+    } catch (err) {
+        console.error("Load Error:", err);
+        testimoniSlider.innerHTML = `<p style="text-align:center; width:100%;">Gagal memuat testimoni. Periksa koneksi server.</p>`;
+    }
+}
+
+function startPolling() {
+    clearInterval(pollInterval);
+    pollInterval = setInterval(loadTestimoni, POLL_INTERVAL_MS);
+}
+
+function renderSlider(rows) {
+    clearInterval(sliderInterval);
+    testimoniSlider.innerHTML = "";
+
+    if (rows && rows.length > 0) {
+        rows.forEach((item) => {
+            const slideCard = document.createElement("div");
+            slideCard.className = "testi-slider-card";
+
+            const actionButtons = (item.nama === currentUser) ? `
+                <div class="card-actions">
+                    <button class="btn-edit-sm" data-id="${item.id}"><i class="fa-solid fa-pen"></i> Edit</button>
+                    <button class="btn-delete-sm" data-id="${item.id}"><i class="fa-solid fa-trash"></i> Hapus</button>
+                </div>
+            ` : '';
+
+            slideCard.innerHTML = `
+                <div class="testi-bubble">
+                    <h4><i class="fa-solid fa-user-tie"></i> ${escapeHTML(item.nama)}</h4>
+                    <p>"${escapeHTML(item.pesan)}"</p>
+                    ${actionButtons}
+                </div>
+            `;
+            testimoniSlider.appendChild(slideCard);
+        });
+
+        if (rows.length > 1) {
+            const firstCardClone = testimoniSlider.children[0].cloneNode(true);
+            testimoniSlider.appendChild(firstCardClone);
+            startSliderAnimation(rows.length);
+        }
+
+        attachCardEvents(rows);
+    } else {
+        testimoniSlider.innerHTML = `<p style="text-align:center; width:100%;">Belum ada testimoni.</p>`;
+    }
 }
 
 function startSliderAnimation(totalDataReal) {
@@ -187,41 +211,39 @@ function startSliderAnimation(totalDataReal) {
 
     sliderInterval = setInterval(() => {
         currentIndex++;
-        
-        // Geser ke kanan dengan transisi halus
+
         for (let i = 0; i < cards.length; i++) {
-            if(cards[i]) {
+            if (cards[i]) {
                 cards[i].style.transition = "transform 0.5s cubic-bezier(0.25, 1, 0.5, 1)";
                 cards[i].style.transform = `translateX(-${currentIndex * 100}%)`;
             }
         }
 
-        // Jika sampai di klona kartu pertama (ujung kanan)
         if (currentIndex === totalDataReal) {
             setTimeout(() => {
                 currentIndex = 0;
-                // Lompat kembali ke posisi kartu pertama secara instan (tanpa transisi geser kiri)
                 for (let i = 0; i < cards.length; i++) {
-                    if(cards[i]) {
+                    if (cards[i]) {
                         cards[i].style.transition = "none";
                         cards[i].style.transform = `translateX(0%)`;
                     }
                 }
-            }, 500); // Eksekusi setelah animasi geser selesai berjalan
+            }, 500);
         }
-    }, 2000); // Jeda perpindahan tiap komentar selama 2 detik
+    }, 2000);
 }
 
 // ==========================================================================
 // 4. UPDATE & DELETE CONTROLLER
 // ==========================================================================
-function attachCardEvents(dataSource) {
+function attachCardEvents(rows) {
     document.querySelectorAll(".btn-edit-sm").forEach((btn) => {
         btn.addEventListener("click", (e) => {
             if (!testimoniIdInput || !inputPesan || !formTitle || !btnSaveTestimoni || !btnCancelEdit) return;
 
             const id = e.currentTarget.getAttribute("data-id");
-            const item = dataSource[id];
+            const item = rows.find((r) => String(r.id) === String(id));
+            if (!item) return;
 
             testimoniIdInput.value = id;
             inputPesan.value = item.pesan;
@@ -233,13 +255,27 @@ function attachCardEvents(dataSource) {
     });
 
     document.querySelectorAll(".btn-delete-sm").forEach((btn) => {
-        btn.addEventListener("click", (e) => {
+        btn.addEventListener("click", async (e) => {
             const id = e.currentTarget.getAttribute("data-id");
-            if (confirm("Hapus testimoni ini?")) {
-                remove(ref(db, `testimonis/${id}`)).then(() => {
+            if (!confirm("Hapus testimoni ini?")) return;
+
+            try {
+                const res = await fetch(API_TESTIMONI, {
+                    method: "DELETE",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ id, nama: currentUser })
+                });
+                const result = await res.json();
+                if (result.success) {
                     triggerToast("Testimoni telah dihapus. 🗑️");
                     if (testimoniIdInput && testimoniIdInput.value === id) resetFormMode();
-                });
+                    loadTestimoni();
+                } else {
+                    alert(result.message || "Gagal menghapus testimoni.");
+                }
+            } catch (err) {
+                console.error("Delete Error:", err);
+                alert("Tidak dapat terhubung ke server.");
             }
         });
     });
@@ -263,5 +299,5 @@ function triggerToast(message) {
 }
 
 function escapeHTML(str) {
-    return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag));
+    return String(str).replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag));
 }
